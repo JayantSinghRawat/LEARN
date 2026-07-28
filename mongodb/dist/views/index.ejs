@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whatsapp</title>
+    <link rel = "stylesheet" href="style.css">
+</head>
+<body>
+    <hg3>ALL CHATS</hg3>
+    <% for(let chat of chats) {%>
+        <div class = "chat">
+            <p>From : <%= chat.from %></p>
+            <div class = "msg">
+                <p><%= chat.msg %></p>
+            </div>
+            <p>Recived by : <%= chat.to %></p>
+            <hr>
+        </div>
+    <% }%>    
+    
+</body>
+</html>
