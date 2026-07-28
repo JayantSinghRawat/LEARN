@@ -2,8 +2,10 @@ import express, { Request, Response } from "express";
 import path from "path";
 import mongoose from "mongoose";
 import { fileURLToPath } from "url";
+import methodOverride from "method-override";
 
 import chat from "./models/chat.js";
+
 
 
 
@@ -16,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.set("views",path.join(__dirname,"views"));
 app.set("view engine","ejs");
 app.use(express.static(path.join(__dirname,"public")));
+app.use(methodOverride("_method"))
 
 
 main()
@@ -73,7 +76,32 @@ app.post('/chats', (req:Request,res:Response)=>{
             console.log(err);
             res.send("err while saving to db");
         })
-    
+})
+app.delete('/chats/:id',async (req:Request,res:Response)=>{
+    let id = req.params.id;
+    await chat.findByIdAndDelete(id);
+    res.redirect("/chats");
+})
+
+
+app.get("/chats/:id/edit",async (req:Request,res:Response)=>{
+    let id = req.params.id;
+    console.log(id);
+    let data = await chat.findById(id);
+    res.render('edit.ejs',{data});
+})
+
+app.put("/chats/:id",async (req:Request,res:Response)=>{
+    let id = req.params.id;
+    let body = req.body;
+    console.log(body.msg);
+    let updatedchat = await chat.findByIdAndUpdate(
+        id,
+        {msg:body.msg.trim()}
+    );
+    console.log(updatedchat);
+    res.redirect("/chats");
+
 })
 
 
