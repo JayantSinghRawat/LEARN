@@ -1,5 +1,6 @@
 
 import express,{Request,Response,NextFunction} from "express";
+import ExpressError from "./ExpressError.js";
 
 declare global {
     namespace Express {
@@ -36,30 +37,44 @@ const token = (req:Request,res:Response,next:NextFunction)=>{
     if(token === "giveaccess"){
         return next();
     }
-    throw new Error("ACCESS DENIED")
+    throw new ExpressError(401,"ACCESS DENIED");
 }
 app.use('/random',(req:Request,res:Response,next:NextFunction)=>{
     console.log("random only middleware");
     next();
 })
 
-app.get('/wrong',(req:Request,res:Response)=>{
-    // abcd = abcd;
+
+app.get('/err',(req:Request,res:Response)=>{
+    abcd = abcd;
 })
+
 app.get('/api',token,(req:Request,res:Response)=>{
     res.send("data");
 })
 
-app.get("/",(req:Request,res:Response)=>{
-    res.send("hi iam a root");
-})
-app.get("/random",(req:Request,res:Response)=>{
-    res.send("this is a random page")
+app.get('/admin',(req:Request,res:Response)=>{
+    throw new ExpressError(403,"Access to Admin is Forbidden")
 })
 
-app.use((req:Request,res:Response)=>{
-    res.status(404).send("path not found 404")
+
+app.use((err:ExpressError,req:Request,res:Response,next:NextFunction)=>{
+    let {status = 500,message} = err;
+    res.status(status).send(message);
 })
+
+
+
+// app.get("/",(req:Request,res:Response)=>{
+//     res.send("hi iam a root");
+// })
+// app.get("/random",(req:Request,res:Response)=>{
+//     res.send("this is a random page")
+// })
+
+// app.use((req:Request,res:Response)=>{
+//     res.status(404).send("path not found 404")
+// })
 
 app.listen(port,()=>{
     console.log(`server is working on localhost ${port}`)
