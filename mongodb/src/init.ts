@@ -9,7 +9,7 @@ main()
         console.error("Error:", err); 
     });
 async function main():Promise<void> {
-    await mongoose.connect("mongodb://127.0.0.1:27017/whatsapp");
+    await mongoose.connect("mongodb://127.0.0.1:27017/fakewhatsapp");
 }
 
 

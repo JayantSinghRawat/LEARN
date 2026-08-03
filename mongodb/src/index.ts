@@ -1,9 +1,9 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import mongoose from "mongoose";
 import { fileURLToPath } from "url";
 import methodOverride from "method-override";
-
+import ExpressError from "./ExpressError.js";
 import chat from "./models/chat.js";
 
 
@@ -29,7 +29,7 @@ main()
         console.error("Error:", err); 
     });
 async function main():Promise<void> {
-    await mongoose.connect("mongodb://127.0.0.1:27017/whatsapp");
+    await mongoose.connect("mongodb://127.0.0.1:27017/fakewhatsapp");
 }
 
 // let chat1 = new chat({
@@ -43,52 +43,84 @@ async function main():Promise<void> {
 //         console.log(res);
 //     })
 
+//HOME
 app.get('/',(req:Request,res:Response)=>{
     res.send("working"); 
 })
 
 // index route
-app.get('/chats',async(req:Request,res:Response)=>{
-    let chats = await chat.find();
+app.get('/chats',async(req:Request,res:Response,next:NextFunction)=>{
+    try{let chats = await chat.find();
     console.log(chats);
     res.render("index.ejs",{chats});
-
+}catch(err){
+    next(err);
+}
 })
 
-
+//NEW ROUTE
 app.get('/chats/new',(req,res)=>{
+    // throw new ExpressError(404,"pagenotfound");
     res.render("new.ejs");
 })
-app.post('/chats', (req:Request,res:Response)=>{
-    let data = req.body;
+
+app.post('/chats', async (req:Request,res:Response,next:NextFunction)=>{
+    try {let data = req.body;
     const newuser = new chat({
         from:data.from,
         to : data.to,
         msg : data.msg,
         created_at: new Date()
     })
-     newuser.save()
-        .then((saved)=>{
-            console.log(saved);
-            res.redirect('/chats');
-        })
-        .catch((err)=>{
-            console.log(err);
-            res.send("err while saving to db");
-        })
+    await newuser.save()
+    res.redirect('/chats');
+}catch(err){
+    next(err);
+}
+
+        
 })
-app.delete('/chats/:id',async (req:Request,res:Response)=>{
-    let id = req.params.id;
+
+//DELETE
+app.delete('/chats/:id',async (req:Request,res:Response,next:NextFunction)=>{
+    try{let id = req.params.id;
     await chat.findByIdAndDelete(id);
     res.redirect("/chats");
+}catch(err){
+    next(err);
+}
+
 })
 
+function asyncWrap(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
+    return function(req: Request, res: Response, next: NextFunction) {
+        fn(req, res, next).catch((err) => next(err));
+    }
+}
 
-app.get("/chats/:id/edit",async (req:Request,res:Response)=>{
+
+//NEW SHOW ROUTE
+app.get("/chats/:id",asyncWrap(async (req:Request,res:Response,next:NextFunction)=>{
     let id = req.params.id;
     console.log(id);
     let data = await chat.findById(id);
+    if(!data){
+        return next(new ExpressError(404,"chat not found"));
+    }
     res.render('edit.ejs',{data});
+})
+)
+
+//EDIT
+
+app.get("/chats/:id/edit",async (req:Request,res:Response,next:NextFunction)=>{
+    try{let id = req.params.id;
+    console.log(id);
+    let data = await chat.findById(id);
+    res.render('edit.ejs',{data});
+}catch(err){
+    next(err);
+}
 })
 
 app.put("/chats/:id",async (req:Request,res:Response)=>{
@@ -104,6 +136,16 @@ app.put("/chats/:id",async (req:Request,res:Response)=>{
 
 })
 
+
+app.use((err:ExpressError,req:Request,res:Response,next:NextFunction)=>{
+    console.log(err.name);
+    next(err);
+})
+//error handeling middleware
+app.use((err:ExpressError,req:Request,res:Response,next:NextFunction)=>{
+    let {status=500,message="some default error"} = err;
+    res.status(status).send(message);
+})
 
 
 

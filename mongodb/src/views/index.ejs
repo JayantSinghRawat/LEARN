@@ -23,6 +23,9 @@
             <hr>
             <p><%= chat.created_at.toString().split(" ")[4]%></p><br>
              <p><%= chat.created_at.toString().split(" ").splice(0,4).join(" ")%></p><br>
+             <form method = "get" action="/chats/<%= chat._id%>">
+                <button>show</button>
+             </form>
              <form method = "get" action="/chats/<%= chat._id%>/edit">
                 <button>edit</button>
              </form>
