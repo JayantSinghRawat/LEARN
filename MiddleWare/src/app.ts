@@ -44,7 +44,7 @@ app.use('/random',(req:Request,res:Response,next:NextFunction)=>{
 })
 
 app.get('/wrong',(req:Request,res:Response)=>{
-    abcd = abcd;
+    // abcd = abcd;
 })
 app.get('/api',token,(req:Request,res:Response)=>{
     res.send("data");
